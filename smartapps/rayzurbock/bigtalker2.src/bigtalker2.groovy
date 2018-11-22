@@ -2588,6 +2588,34 @@ def Talk(appname, phrase, customSpeechDevice, volume, resume, personality, voice
 					}
 				}
 				spoke = true
+				if (phrase[0]=='|')
+					{
+					def soundType=phrase.toUpperCase()
+					log.debug "soundType: ${soundType} byte1:${phrase[0]}"
+					if (soundType == '|SIREN|')
+						{
+						it.siren()
+						return false
+						}
+					else
+					if (soundType == '|OFF|')
+						{
+						it.off()
+						return false
+						}
+					else
+					if (soundType == '|CHIME|')
+						{
+						it.chime()
+						return false
+						}
+					else	
+					if (soundType == '|DOORBELL|')
+						{
+						it.doorbell()
+						return false
+						}
+					}	
 				it.speak(phrase)
 			}// currentSpeechDevices.each()
 		} //if (!(settings.speechDeviceDefault == null) || !(customSpeechDevice == null))
