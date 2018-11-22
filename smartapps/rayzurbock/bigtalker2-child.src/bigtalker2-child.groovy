@@ -313,7 +313,12 @@ def pageConfigContact(){
             	input name: "contactVolume1", type: "number", title: "Set volume to (overrides default):", required: false
                 input name: "contactResumePlay1", type: "bool", title: "Attempt to resume playing audio?", required: false, defaultValue: (parent.returnVar("resumePlay") == false) ? false : true
                 input name: "contactVoice1", type: "enum", title: "Voice (overrides default):", options: parent.returnVar("supportedVoices"), required: false, submitOnChange: true
-            }
+       			}
+			else
+				{
+                input name: "contactDelayOpen", type: "number", title: "Open Message Delay in MilliSeconds", required: false
+                input name: "contactDelayClose", type: "number", title: "Close Message Delay in MilliSeconds", required: false
+				}
         }
         section("Restrictions"){
             //IN DEVELOPMENT input name: "contactOpenThreshold", type: "number", title: "If it's open for more than this many minutes (default 0)", required: false, defaultValue: 0
@@ -1166,7 +1171,17 @@ def onContact1Event(evt){
 	state."${deviceType}${index}EventValue" = evt.value
 	state."${deviceType}${index}EventTime" = now()
 	LOGDEBUG("(on${deviceType}${index}Event)StateSet:" + state."${deviceType}${index}EventName" + "-" + state."${deviceType}${index}EventDisplayName" + "-" + state."${deviceType}${index}EventValue" + "(" + state."${deviceType}${index}EventValue".capitalize() + ")",false)
-    processEvent(deviceType, deviceState1, deviceState2, deviceState3, deviceState4, index, evt)
+	if (parent.returnVar("speechDeviceType") == "capability.musicPlayer")
+		processEvent(deviceType, deviceState1, deviceState2, deviceState3, deviceState4, index, evt)
+	else			
+	if (evt.value=='open' && contactDelayOpen && contactDelayOpen > 0)
+		runOnce(new Date(now() + contactDelayOpen), processEvent, [data:[deviceType, deviceState1, deviceState2, deviceState3, deviceState4, index, evt]])
+	else			
+	if (evt.value=='closed' && contactDelayClose && contactDelayClose > 0)
+		runOnce(new Date(now() + contactDelayClose), processEvent, [data:[deviceType, deviceState1, deviceState2, deviceState3, deviceState4, index, evt]])
+	else
+		processEvent(deviceType, deviceState1, deviceState2, deviceState3, deviceState4, index, evt)
+
 }
 //END HANDLE CONTACT
 
