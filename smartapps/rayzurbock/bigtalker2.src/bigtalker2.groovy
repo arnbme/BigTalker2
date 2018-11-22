@@ -1880,6 +1880,15 @@ def pageHelpPhraseTokens(){
            if (state.hubType == "SmartThings"){ AvailTokens += "%weathertomorrow% = Tomorrow's weather forecast* based on hub location\n\n" }
            if (state.hubType == "SmartThings"){ AvailTokens += "%weathertomorrow(00000)% = Tomorrow's weather forecast* based on custom zipcode (replace 00000)\n\n" }
            if (state.hubType == "SmartThings"){ AvailTokens += "\n*Weather forecasts provided by Weather Underground" }
+           if (state.hubType == "SmartThings"){ AvailTokens += "\n*Weather forecasts provided by Weather Underground" }
+		   if (state.hubType == "Hubitat" && state.speechDeviceType == "capability.speechSynthesis") 
+		   	   {
+	           AvailTokens += "Lannouncer TTS commands: must be coded as a standalone message\n\n"
+	           AvailTokens += "|siren| = Lannoucer TTS siren command\n\n"
+	           AvailTokens += "|off| = Lannoucer TTS siren off command\n\n"
+	           AvailTokens += "|chime| = Lannoucer TTS chime command\n\n"
+	           AvailTokens += "|doorbell| = Lannoucer TTS doorbell command\n\n"
+	           }
            paragraph(AvailTokens)
        }
    }
@@ -2591,7 +2600,7 @@ def Talk(appname, phrase, customSpeechDevice, volume, resume, personality, voice
 				if (phrase[0]=='|')
 					{
 					def soundType=phrase.toUpperCase()
-					log.debug "soundType: ${soundType} byte1:${phrase[0]}"
+//					log.debug "soundType: ${soundType} byte1:${phrase[0]}"
 					if (soundType == '|SIREN|')
 						{
 						it.siren()
