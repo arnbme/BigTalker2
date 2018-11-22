@@ -782,6 +782,15 @@ def pageHelpPhraseTokens(){
            if (state.hubType == "SmartThings"){ AvailTokens += "%weathertomorrow% = Tomorrow's weather forecast* based on hub location\n\n" }
            if (state.hubType == "SmartThings"){ AvailTokens += "%weathertomorrow(00000)% = Tomorrow's weather forecast* based on custom zipcode (replace 00000)\n\n" }
            if (state.hubType == "SmartThings"){ AvailTokens += "\n*Weather forecasts provided by Weather Underground" }
+		   else
+			if (parent.returnVar("speechDeviceType") != "capability.musicPlayer") 
+				{
+				AvailTokens += "Lannouncer TTS commands: must be coded as a standalone message\n\n"
+				AvailTokens += "|siren| = Lannoucer TTS siren command\n\n"
+				AvailTokens += "|off| = Lannoucer TTS siren off command\n\n"
+				AvailTokens += "|chime| = Lannoucer TTS chime command\n\n"
+				AvailTokens += "|doorbell| = Lannoucer TTS doorbell command\n\n"
+				}
            paragraph(AvailTokens)
        }
    }
