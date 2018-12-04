@@ -1,3 +1,23 @@
+ /*
+ *  Big Talker Child Hubitat 
+ *
+ *	Copyright 2018 Brian Lowrance (rayzurbock)
+ *	with changes by Arn Burkhoff (AAB)
+ *
+ *  Licensed under the Apache License with changes noted above, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ *
+ * 	Dec 04, 2018	C2.0.7.AAB001 was getting multiple triggers on mode change, making lannoucer go nuts
+ *									add mode to mode subscribe.	
+ * 	Dec 01, 2018	c2.0.7.AAB001 Use parent routine for token help, eliminate redundant code
+ *
+ */
 definition(
     name: "BigTalker2-Child",
     namespace: "rayzurbock",
@@ -753,52 +773,16 @@ def pageConfigRoutine(){
 }
 
 
-def pageHelpPhraseTokens(){
-	//KEEP IN SYNC WITH PARENT!
-    dynamicPage(name: "pageHelpPhraseTokens", title: "Available Phrase Tokens", install: false, uninstall:false){
-       section("The following tokens can be used in your event phrases and will be replaced as listed:"){
-       	   def AvailTokens = ""
-           if (state.hubType == "SmartThings"){ AvailTokens += "%askalexa% = Send phrase to AskAlexa SmartApp's message queue\n\n" }
-           AvailTokens += "%groupname% = Name that you gave for the event group\n\n"
-           AvailTokens += "%date% = Current date; January 01 2018\n\n"
-           AvailTokens += "%day% = Current day; Monday\n\n"
-           AvailTokens += "%devicename% = Triggering devices display name\n\n"
-           AvailTokens += "%devicetype% = Triggering device type; motion, switch, etc\n\n"
-           AvailTokens += "%devicechange% = State change that occurred; on/off, active/inactive, etc...\n\n"
-           AvailTokens += "%description% = The description of the event that is to be displayed to the user in the mobile application. \n\n"
-           AvailTokens += "%locationname% = Hub location name; home, work, etc\n\n"
-           AvailTokens += "%lastmode% = Last hub mode; home, away, etc\n\n"
-           AvailTokens += "%mode% = Current hub mode; home, away, etc\n\n"
-           AvailTokens += "%mp3(url)% = Play hosted MP3 file; URL should be http://www.domain.com/path/file.mp3 \n"
-           AvailTokens += "No other tokens or phrases can be used with %mp3(url)%\n\n"
-           AvailTokens += "%time% = Current hub time; HH:mm am/pm\n\n"
-		   if (state.hubType == "SmartThings"){ AvailTokens += "%shmstatus% = SmartHome Monitor Status (Disarmed, Armed Home, Armed Away)\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "%weathercurrent% = Current weather based on hub location\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "%weathercurrent(00000)% = Current weather* based on custom zipcode (replace 00000)\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "%weathertoday% = Today's weather forecast* based on hub location\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "%weathertoday(00000)% = Today's weather forecast* based on custom zipcode (replace 00000)\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "%weathertonight% = Tonight's weather forecast* based on hub location\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "%weathertonight(00000)% = Tonight's weather* forecast based on custom zipcode (replace 00000)\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "%weathertomorrow% = Tomorrow's weather forecast* based on hub location\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "%weathertomorrow(00000)% = Tomorrow's weather forecast* based on custom zipcode (replace 00000)\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "\n*Weather forecasts provided by Weather Underground" }
-		   else
-			if (parent.returnVar("speechDeviceType") != "capability.musicPlayer") 
-				{
-				AvailTokens += "Lannouncer TTS commands: must be coded as a standalone message\n\n"
-				AvailTokens += "|siren| = Lannoucer TTS siren command\n\n"
-				AvailTokens += "|off| = Lannoucer TTS siren off command\n\n"
-				AvailTokens += "|chime| = Lannoucer TTS chime command\n\n"
-				AvailTokens += "|doorbell| = Lannoucer TTS doorbell command\n\n"
-				}
-           paragraph(AvailTokens)
-       }
-   }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+def pageHelpPhraseTokens()
+	{
+    dynamicPage(name: "pageHelpPhraseTokens", title: "Available Phrase Tokens", install: false, uninstall:false)
+    	{
+		section("The following tokens can be used in your event phrases and will be replaced as listed:")
+			{
+			paragraph(parent.pageAvailTokens())
+			}
+		}
+	}
 
 def initialize() {
     if (state.groupEnabled == true || state.groupEnabled == "true" || state.groupEnabled == null) {
@@ -860,7 +844,7 @@ def initSubscribe(){
     //Subscribe Routine
     if (routineDeviceGroup1) { subscribe(location, "routineExecuted", onRoutineEvent) }
     //Subscribe Mode
-    if (modePhraseGroup1) { subscribe(location, onModeChangeEvent) }
+    if (modePhraseGroup1) { subscribe(location,"mode", onModeChangeEvent) }
     
     LOGDEBUG ("END initSubscribe()", true)
 }
@@ -1364,6 +1348,7 @@ def processModeChangeEvent(index, evt){
     def myVoice = getMyVoice(settings?.modeVoice1)
     LOGDEBUG("(onModeEvent): Last Mode: ${state.lastMode}, New Mode: ${location.mode}, ${myVoice}", true)
     //Check Restrictions
+	
     if (!(processRestrictions("mode",index))){ return }
 	if (parent.returnVar("speechDeviceType") == "capability.musicPlayer") {
 		if (index == 1) {
@@ -1373,32 +1358,33 @@ def processModeChangeEvent(index, evt){
 	} else { resume = false }
     if (settings?.modePersonality1 == "Yes") {personality = true}
     if (settings?.modePersonality1 == "No") {personality = false}
-    if (settings.modePhraseGroup1.contains(location.mode)){
-        if (!settings.modeExcludePhraseGroup1 == null){
-            //settings.modeExcluePhraseGroup1 is not empty
-            if (!(settings.modeExcludePhraseGroup1.contains(state.lastMode))) {
-                //If we are not coming from an exclude mode, Talk.
-                state.TalkPhrase = null
-                state.speechDevice = null
-                state.TalkPhrase = settings.TalkOnModeChange1; state.speechDevice = modePhraseSpeechDevice1; myVolume = getDesiredVolume(settings.modePhraseVolume1)
-                if (!(state?.TalkPhrase == null)) {sendTalk(app.label,state.TalkPhrase, state.speechDevice, myVolume, resume, personality, myVoice, evt)} else {LOGDEBUG("Not configured to speak for this event", true)}
-                state.TalkPhrase = null
-                state.speechDevice = null
-            } else {
-                LOGDEBUG("Mode change silent due to exclusion configuration (${state.lastMode} >> ${location.mode})", true)
-            }
-        } else {
-            //settings.modeExcluePhraseGroup1 is empty, no exclusions, Talk.
-            state.TalkPhrase = null
-            state.speechDevice = null
-            state.TalkPhrase = settings.TalkOnModeChange1; state.speechDevice = modePhraseSpeechDevice1; myVolume = getDesiredVolume(settings.modePhraseVolume1)
-            if (!(state?.TalkPhrase == null)) {sendTalk(app.label,state.TalkPhrase, state.speechDevice, myVolume, resume, personality, myVoice, evt)} else {LOGDEBUG("Not configured to speak for this event", true)}
-            state.TalkPhrase = null
-            state.speechDevice = null
-        }
-    }
-    state.lastMode = location.mode
-    parent.setLastMode(location.mode)
+	state.lastMode = location.mode
+	parent.setLastMode(location.mode)
+	if (settings.modePhraseGroup1.contains(location.mode))
+		{
+		if (!settings.modeExcludePhraseGroup1 == null){
+			//settings.modeExcluePhraseGroup1 is not empty
+			if (!(settings.modeExcludePhraseGroup1.contains(state.lastMode))) {
+				//If we are not coming from an exclude mode, Talk.
+				state.TalkPhrase = null
+				state.speechDevice = null
+				state.TalkPhrase = settings.TalkOnModeChange1; state.speechDevice = modePhraseSpeechDevice1; myVolume = getDesiredVolume(settings.modePhraseVolume1)
+				if (!(state?.TalkPhrase == null)) {sendTalk(app.label,state.TalkPhrase, state.speechDevice, myVolume, resume, personality, myVoice, evt)} else {LOGDEBUG("Not configured to speak for this event", true)}
+				state.TalkPhrase = null
+				state.speechDevice = null
+			} else {
+				LOGDEBUG("Mode change silent due to exclusion configuration (${state.lastMode} >> ${location.mode})", true)
+			}
+		} else {
+			//settings.modeExcluePhraseGroup1 is empty, no exclusions, Talk.
+			state.TalkPhrase = null
+			state.speechDevice = null
+			state.TalkPhrase = settings.TalkOnModeChange1; state.speechDevice = modePhraseSpeechDevice1; myVolume = getDesiredVolume(settings.modePhraseVolume1)
+			if (!(state?.TalkPhrase == null)) {sendTalk(app.label,state.TalkPhrase, state.speechDevice, myVolume, resume, personality, myVoice, evt)} else {LOGDEBUG("Not configured to speak for this event", true)}
+			state.TalkPhrase = null
+			state.speechDevice = null
+		}
+		}
 }
 //END MODE CHANGE
 
@@ -1700,5 +1686,5 @@ def LOGERROR(txt){
 }
 
 def setAppVersion(){
-    state.appversion = "C2.0.7"
+    state.appversion = "C2.0.7.AAB001"
 }
