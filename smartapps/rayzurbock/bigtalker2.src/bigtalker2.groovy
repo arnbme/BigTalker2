@@ -1,3 +1,26 @@
+ /*
+ *  Big Talker Parent Hubitat 
+ *
+ *	Copyright 2018 Brian Lowrance (rayzurbock)
+ *	with changes by Arn Burkhoff (AAB)
+ *
+ *  Licensed under the Apache License with changes noted above, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ *
+ * 	Nov 25, 2018	P2.0.8.AAB001 restore weather interface using ApiXu DTH, restore weather tokens and code
+ *									incomplete due to issues with APixU information
+ * 	Nov 25, 2018	P2.0.8.AAB001 use parent routine for all token help, eliminate child help routine
+ * 	Nov 22, 2018	P2.0.8.AAB001 Add Lannouncer commands due to Hubitat failing @#ALARM=CHIME or @|ALARM=CHIME in speak
+ *
+ */
+
+
 definition(
     name: "BigTalker2",
     namespace: "rayzurbock",
@@ -1852,47 +1875,51 @@ def getMyVoice(deviceVoice){
 }
 
 def pageHelpPhraseTokens(){
-	//KEEP IN SYNC WITH CHILD!
     dynamicPage(name: "pageHelpPhraseTokens", title: "Available Phrase Tokens", install: false, uninstall:false){
        section("The following tokens can be used in your event phrases and will be replaced as listed:"){
-       	   def AvailTokens = ""
-           if (state.hubType == "SmartThings"){ AvailTokens += "%askalexa% = Send phrase to AskAlexa SmartApp's message queue\n\n" }
-           AvailTokens += "%groupname% = Name that you gave for the event group\n\n"
-           AvailTokens += "%date% = Current date; January 01 2018\n\n"
-           AvailTokens += "%day% = Current day; Monday\n\n"
-           AvailTokens += "%devicename% = Triggering devices display name\n\n"
-           AvailTokens += "%devicetype% = Triggering device type; motion, switch, etc\n\n"
-           AvailTokens += "%devicechange% = State change that occurred; on/off, active/inactive, etc...\n\n"
-           AvailTokens += "%description% = The description of the event that is to be displayed to the user in the mobile application. \n\n"
-           AvailTokens += "%locationname% = Hub location name; home, work, etc\n\n"
-           AvailTokens += "%lastmode% = Last hub mode; home, away, etc\n\n"
-           AvailTokens += "%mode% = Current hub mode; home, away, etc\n\n"
-           AvailTokens += "%mp3(url)% = Play hosted MP3 file; URL should be http://www.domain.com/path/file.mp3 \n"
-           AvailTokens += "No other tokens or phrases can be used with %mp3(url)%\n\n"
-           AvailTokens += "%time% = Current hub time; HH:mm am/pm\n\n"
-		   if (state.hubType == "SmartThings"){ AvailTokens += "%shmstatus% = SmartHome Monitor Status (Disarmed, Armed Home, Armed Away)\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "%weathercurrent% = Current weather based on hub location\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "%weathercurrent(00000)% = Current weather* based on custom zipcode (replace 00000)\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "%weathertoday% = Today's weather forecast* based on hub location\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "%weathertoday(00000)% = Today's weather forecast* based on custom zipcode (replace 00000)\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "%weathertonight% = Tonight's weather forecast* based on hub location\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "%weathertonight(00000)% = Tonight's weather* forecast based on custom zipcode (replace 00000)\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "%weathertomorrow% = Tomorrow's weather forecast* based on hub location\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "%weathertomorrow(00000)% = Tomorrow's weather forecast* based on custom zipcode (replace 00000)\n\n" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "\n*Weather forecasts provided by Weather Underground" }
-           if (state.hubType == "SmartThings"){ AvailTokens += "\n*Weather forecasts provided by Weather Underground" }
-		   if (state.hubType == "Hubitat" && state.speechDeviceType == "capability.speechSynthesis") 
-		   	   {
-	           AvailTokens += "Lannouncer TTS commands: must be coded as a standalone message\n\n"
-	           AvailTokens += "|siren| = Lannoucer TTS siren command\n\n"
-	           AvailTokens += "|off| = Lannoucer TTS siren off command\n\n"
-	           AvailTokens += "|chime| = Lannoucer TTS chime command\n\n"
-	           AvailTokens += "|doorbell| = Lannoucer TTS doorbell command\n\n"
-	           }
-           paragraph(AvailTokens)
+       paragraph(pageAvailTokens())
        }
    }
 }
+def pageAvailTokens()
+	{
+	   def AvailTokens = ""
+	   if (state.hubType == "SmartThings"){ AvailTokens += "%askalexa% = Send phrase to AskAlexa SmartApp's message queue\n\n" }
+	   AvailTokens += "%groupname% = Name that you gave for the event group\n\n"
+	   AvailTokens += "%date% = Current date; January 01 2018\n\n"
+	   AvailTokens += "%day% = Current day; Monday\n\n"
+	   AvailTokens += "%devicename% = Triggering devices display name\n\n"
+	   AvailTokens += "%devicetype% = Triggering device type; motion, switch, etc\n\n"
+	   AvailTokens += "%devicechange% = State change that occurred; on/off, active/inactive, etc...\n\n"
+	   AvailTokens += "%description% = The description of the event that is to be displayed to the user in the mobile application. \n\n"
+	   AvailTokens += "%locationname% = Hub location name; home, work, etc\n\n"
+	   AvailTokens += "%lastmode% = Last hub mode; home, away, etc\n\n"
+	   AvailTokens += "%mode% = Current hub mode; home, away, etc\n\n"
+	   AvailTokens += "%mp3(url)% = Play hosted MP3 file; URL should be http://www.domain.com/path/file.mp3 \n"
+	   AvailTokens += "No other tokens or phrases can be used with %mp3(url)%\n\n"
+	   AvailTokens += "%time% = Current hub time; HH:mm am/pm\n\n"
+	   AvailTokens += "%shmstatus% = SmartHome Monitor Status (Disarmed, Armed Home, Armed Away)\n\n" 
+	   AvailTokens += "%weathercurrent% = Current weather based on ApiXu location\n\n" 
+//	   AvailTokens += "%weathercurrent(00000)% = Current weather* based on custom zipcode (replace 00000)\n\n" 
+	   AvailTokens += "%weathertoday% = Today's weather forecast* based on ApiXu location\n\n" 
+//	   AvailTokens += "%weathertoday(00000)% = Today's weather forecast* based on custom zipcode (replace 00000)\n\n" 
+//	   AvailTokens += "%weathertonight% = Tonight's weather forecast* based on ApiXu location\n\n" 
+//	   AvailTokens += "%weathertonight(00000)% = Tonight's weather* forecast based on custom zipcode (replace 00000)\n\n" 
+	   AvailTokens += "%weathertomorrow% = Tomorrow's weather forecast* based on ApiXu location\n\n" 
+//	   AvailTokens += "%weathertomorrow(00000)% = Tomorrow's weather forecast* based on custom zipcode (replace 00000)\n\n" 
+	   AvailTokens += "*Weather information requires installation of the ApiXu device\n\n"
+	   if (state.hubType == "Hubitat" && state.speechDeviceType == "capability.speechSynthesis") 
+		   {
+		   AvailTokens += "Lannouncer TTS commands: must be coded as a standalone message\n\n"
+		   AvailTokens += "|siren| = Lannoucer TTS siren command\n\n"
+		   AvailTokens += "|off| = Lannoucer TTS siren off command\n\n"
+		   AvailTokens += "|chime| = Lannoucer TTS chime command\n\n"
+		   AvailTokens += "|doorbell| = Lannoucer TTS doorbell command\n\n"
+		   }
+	   return AvailTokens
+	   }
+	       
+
 
 def pageConfigureSpeechDeviceType(){
     if (!(state.installed == true)) { state.installed = false; state.speechDeviceType = "capability.musicPlayer"}
@@ -1955,6 +1982,9 @@ def pageConfigureDefaults(){
         section(){
             input "personalityMode", "bool", title: "Allow Personality?", required: true, defaultValue: false
             input "debugmode", "bool", title: "Enable debug logging", required: true, defaultValue: false
+        }
+        section(){
+            input "apixuDTH", "device.ApiXUWeatherDriver", title: "Optional ApiXu Weather device", required: false
         }
     }
 }
@@ -2070,70 +2100,41 @@ def processPhraseVariables(appname, phrase, evt){
             	}
        		}
     	}
-    	if (phrase.toLowerCase().contains("%devicetype%")) {phrase = phrase.toLowerCase().replace('%devicetype%', evt.name)}  //Device type: motion, switch, etc...
-    	if (phrase.toLowerCase().contains("%devicechange%")) {phrase = phrase.toLowerCase().replace('%devicechange%', evt.value)}  //State change that occurred: on/off, active/inactive, etc...
-    	if (phrase.toLowerCase().contains("%description%")) {phrase = phrase.toLowerCase().replace('%description%', evt.descriptionText)}  //Description of the event which occurred via device-specific text`
-    	if (phrase.toLowerCase().contains("%locationname%")) {phrase = phrase.toLowerCase().replace('%locationname%', location.name)}
-    	if (phrase.toLowerCase().contains("%lastmode%")) {phrase = phrase.toLowerCase().replace('%lastmode%', state.lastMode)}
-    	if (phrase.toLowerCase().contains("%mode%")) {phrase = phrase.toLowerCase().replace('%mode%', location.mode)}
-    	if (phrase.toLowerCase().contains("%time%")) {
-    		phrase = phrase.toLowerCase().replace('%time%', getTimeFromCalendar(false,true))
-        	if ((phrase.toLowerCase().contains("00:")) && (phrase.toLowerCase().contains("am"))) {phrase = phrase.toLowerCase().replace('00:', "12:")}
-        	if ((phrase.toLowerCase().contains("24:")) && (phrase.toLowerCase().contains("am"))) {phrase = phrase.toLowerCase().replace('24:', "12:")}
-        	if ((phrase.toLowerCase().contains("0:")) && (!phrase.toLowerCase().contains("10:")) && (phrase.toLowerCase().contains("am"))) {phrase = phrase.toLowerCase().replace('0:', "12:")}
-    	}
-    	if (phrase.toLowerCase().contains("%weathercurrent%")) {phrase = phrase.toLowerCase().replace('%weathercurrent%', getWeather("current", zipCode)); phrase = adjustWeatherPhrase(phrase)}
-    	if (phrase.toLowerCase().contains("%weathertoday%")) {phrase = phrase.toLowerCase().replace('%weathertoday%', getWeather("today", zipCode)); phrase = adjustWeatherPhrase(phrase)}
-    	if (phrase.toLowerCase().contains("%weathertonight%")) {phrase = phrase.toLowerCase().replace('%weathertonight%', getWeather("tonight", zipCode));phrase = adjustWeatherPhrase(phrase)}
-    	if (phrase.toLowerCase().contains("%weathertomorrow%")) {phrase = phrase.toLowerCase().replace('%weathertomorrow%', getWeather("tomorrow", zipCode));phrase = adjustWeatherPhrase(phrase)}
-    	if (phrase.toLowerCase().contains("%weathercurrent(")) {
-	        if (phrase.toLowerCase().contains(")%")) {
-	            def phraseZipStart = (phrase.toLowerCase().indexOf("%weathercurrent(") + 16)
-	            def phraseZipEnd = (phrase.toLowerCase().indexOf(")%"))
-	            zipCode = phrase.substring(phraseZipStart, phraseZipEnd)
-	            LOGDEBUG("Custom zipCode: ${zipCode}")
-	            phrase = phrase.toLowerCase().replace("%weathercurrent(${zipCode.toLowerCase()})%", getWeather("current", zipCode.toLowerCase()))
-	            phrase = adjustWeatherPhrase(phrase.toLowerCase())
-	        } else {
-	            phrase = "Custom Zip Code format error in request for current weather"
-	        }
-	    }
-	    if (phrase.toLowerCase().contains("%weathertoday(")) {
-	        if (phrase.contains(")%")) {
-	            def phraseZipStart = (phrase.toLowerCase().indexOf("%weathertoday(") + 14)
-	            def phraseZipEnd = (phrase.toLowerCase().indexOf(")%"))
-	            zipCode = phrase.substring(phraseZipStart, phraseZipEnd)
-	            LOGDEBUG("Custom zipCode: ${zipCode}")
-	            phrase = phrase.toLowerCase().replace("%weathertoday(${zipCode.toLowerCase()})%", getWeather("today", zipCode.toLowerCase()))
-	            phrase = adjustWeatherPhrase(phrase.toLowerCase())
-	        } else {
-	            phrase = "Custom Zip Code format error in request for today's weather"
-	        }
-	    }
-	    if (phrase.toLowerCase().contains("%weathertonight(")) {
-	        if (phrase.contains(")%")) {
-	            def phraseZipStart = (phrase.toLowerCase().indexOf("%weathertonight(") + 16)
-	            def phraseZipEnd = (phrase.toLowerCase().indexOf(")%"))
-	            zipCode = phrase.substring(phraseZipStart, phraseZipEnd)
-	            LOGDEBUG("Custom zipCode: ${zipCode}")
-	            phrase = phrase.toLowerCase().replace("%weathertonight(${zipCode.toLowerCase()})%", getWeather("tonight", zipCode.toLowerCase()))
-	            phrase = adjustWeatherPhrase(phrase)
-	        } else {
-	            phrase = "Custom Zip Code format error in request for tonight's weather"
-	        }
-	    }
-	    if (phrase.toLowerCase().contains("%weathertomorrow(")) {
-	        if (phrase.contains(")%")) {
-	            def phraseZipStart = (phrase.toLowerCase().indexOf("%weathertomorrow(") + 17)
-	            def phraseZipEnd = (phrase.toLowerCase().indexOf(")%"))
-	            zipCode = phrase.substring(phraseZipStart, phraseZipEnd)
-	            LOGDEBUG("Custom zipCode: ${zipCode}")
-	            phrase = phrase.toLowerCase().replace("%weathertomorrow(${zipCode.toLowerCase()})%", getWeather("tomorrow", zipCode.toLowerCase()))
-	            phrase = adjustWeatherPhrase(phrase)
-	        } else {
-	            phrase = "Custom ZipCode format error in request for tomorrow's weather"
-	        }
-	    }
+		if (phrase.toLowerCase().contains("%devicetype%")) {phrase = phrase.toLowerCase().replace('%devicetype%', evt.name)}  //Device type: motion, switch, etc...
+		if (phrase.toLowerCase().contains("%devicechange%")) {phrase = phrase.toLowerCase().replace('%devicechange%', evt.value)}  //State change that occurred: on/off, active/inactive, etc...
+		if (phrase.toLowerCase().contains("%description%")) {phrase = phrase.toLowerCase().replace('%description%', evt.descriptionText)}  //Description of the event which occurred via device-specific text`
+		if (phrase.toLowerCase().contains("%locationname%")) {phrase = phrase.toLowerCase().replace('%locationname%', location.name)}
+		if (phrase.toLowerCase().contains("%lastmode%")) {phrase = phrase.toLowerCase().replace('%lastmode%', state.lastMode)}
+		if (phrase.toLowerCase().contains("%mode%")) {phrase = phrase.toLowerCase().replace('%mode%', location.mode)}
+		if (phrase.toLowerCase().contains("%time%")) 
+			{
+			phrase = phrase.toLowerCase().replace('%time%', getTimeFromCalendar(false,true))
+			if ((phrase.toLowerCase().contains("00:")) && (phrase.toLowerCase().contains("am"))) {phrase = phrase.toLowerCase().replace('00:', "12:")}
+			if ((phrase.toLowerCase().contains("24:")) && (phrase.toLowerCase().contains("am"))) {phrase = phrase.toLowerCase().replace('24:', "12:")}
+			if ((phrase.toLowerCase().contains("0:")) && (!phrase.toLowerCase().contains("10:")) && (phrase.toLowerCase().contains("am"))) {phrase = phrase.toLowerCase().replace('0:', "12:")}
+			}
+/*		Process weather with apixu dth	*/
+
+    	if (apixuDTH)
+       		{
+  			if (phrase.toLowerCase().contains("%weathercurrent%")) 
+    			{
+    			log.debug "processing weathercurrent"
+    			phrase = phrase.toLowerCase().replace('%weathercurrent%', getWeather("current", zipCode)); 
+    			phrase = adjustWeatherPhrase(phrase)
+    			}
+    		if (phrase.toLowerCase().contains("%weathertoday%")) 
+    			{
+    			phrase = phrase.toLowerCase().replace('%weathertoday%', getWeather("today", zipCode)); 
+    			phrase = adjustWeatherPhrase(phrase)
+    			}
+    		if (phrase.toLowerCase().contains("%weathertomorrow%")) 
+    			{
+    			phrase = phrase.toLowerCase().replace('%weathertomorrow%', getWeather("tomorrow", zipCode));
+    			phrase = adjustWeatherPhrase(phrase)
+    			}
+    		}	
+				
 	    if (state.speechDeviceType == "capability.speechSynthesis"){
 	        //ST TTS Engine pronunces "Dash", so only convert for speechSynthesis devices (LANnouncer)
 	        if (phrase.contains(",")) { phrase = phrase.replace(","," - ") }
@@ -2282,7 +2283,11 @@ def adjustWeatherPhrase(phraseIn){
     def phraseOut = ""
     phraseOut = phraseIn.toUpperCase()
     phraseOut = phraseOut.replace(" N ", " North ")
+    phraseOut = phraseOut.replace(" NE ", " North East")
+  	phraseOut = phraseOut.replace(" NW ", " North West")
     phraseOut = phraseOut.replace(" S ", " South ")
+    phraseOut = phraseOut.replace(" SE ", " South East")
+    phraseOut = phraseOut.replace(" SW ", " South West")
     phraseOut = phraseOut.replace(" E ", " East ")
     phraseOut = phraseOut.replace(" W ", " West ")
     phraseOut = phraseOut.replace(" NNE ", " North Northeast ")
@@ -3388,55 +3393,45 @@ def TalkQueue(appname, phrase, customSpeechDevice, volume, resume, personality, 
 
 def getWeather(mode, zipCode) {
     //Function derived from "Sonos Weather Forecast" SmartApp by Smartthings (modified)
+    //Modified for apixu by aab 11/25/18
     LOGDEBUG("Processing: getWeather(${mode},${zipCode})")
-	def weather = getWeatherFeature("forecast", zipCode)
-	def current = getWeatherFeature("conditions", zipCode)
 	def isMetric = location.temperatureScale == "C"
 	def delim = ""
 	def sb = new StringBuilder()
-	if (mode == "current") {
-			if (isMetric) {
-               	sb << "The current temperature is ${Math.round(current.current_observation.temp_c)} degrees."
-            }
-            else {
-               	sb << "The current temperature is ${Math.round(current.current_observation.temp_f)} degrees."
-            }
-			delim = " "
-	} //mode == current
-    else if (mode == "today") {
+	if (mode == "current") 
+		{
+		sb << "Currently ${apixuDTH.currentValue('condition_text')}. "
+		sb << "temperature ${Math.round(apixuDTH.currentValue('temperature'))} degrees. "
+		sb << "humidity ${apixuDTH.currentValue('humidity')} percent. "
+		if (apixuDTH.currentValue('wind') == '0 mph ' || apixuDTH.currentValue('wind') == '0 kph ')
+			sb <<  " wind is calm. "
+		else	
+			sb << "wind ${apixuDTH.currentValue('wind_dir')} ${apixuDTH.currentValue('wind')}"
+//		def obs=apixuDTH.currentValue('rawdata')
+//		log.debug "forecast " + log.debug "forecast " + apixuDTH.currentValue('rawdata') 
+//		log.debug "forecast " + apixuDTH.currentValue('rawdata').forecast.forecastday[0].day.condition.text
+//		sb="Forecast ${apixuDTH?.rawdata.forecast.forecastday[0].day.condition.text}"	
+		delim = " "
+		}
+    else if (mode == "today") 
+    	{
 		sb << delim
 		sb << "Today's forecast is "
-		if (isMetric) {
-           	sb << weather.forecast.txt_forecast.forecastday[0].fcttext_metric 
-        }
-        else {
-           	sb << weather.forecast.txt_forecast.forecastday[0].fcttext
-        }
-	} //mode == today
-	else if (mode == "tonight") {
-        sb << delim
-		sb << "Tonight will be "
-		if (isMetric) {
-          	sb << weather.forecast.txt_forecast.forecastday[1].fcttext_metric 
-        }
-        else {
-        	sb << weather.forecast.txt_forecast.forecastday[1].fcttext
-        }
-	} //mode == tonight
-	else if (mode == "tomorrow") {
+		sb << apixuDTH.obs.forecast.forecastday[1].day.condition.text
+        } 
+	else if (mode == "tomorrow")
+		{
 		sb << delim
 		sb << "Tomorrow will be "
-		if (isMetric) {
-           	sb << weather.forecast.txt_forecast.forecastday[2].fcttext_metric 
-        }
-        else {
-          	sb << weather.forecast.txt_forecast.forecastday[2].fcttext
-        }
-	} //mode == tomorrow
-    else {
-        sb < "ERROR: Requested weather mode was not recognized."
-    }//mode = unknown
-	def msg = sb.toString()
+		sb << apixuDTH.obs.forecast.forecastday[2].day.condition.text
+		if (isMetric) 
+			sb << weather.forecast.txt_forecast.forecastday[2].fcttext_metric 
+		else
+			sb << weather.forecast.txt_forecast.forecastday[2].fcttext
+		} 
+	else 
+		sb < "ERROR: Requested weather mode was not recognized."
+    def msg = sb.toString()
     msg = msg.replaceAll(/([0-9]+)C/,'$1 degrees celsius')
     msg = msg.replaceAll(/([0-9]+)F/,'$1 degrees fahrenheit')
     LOGDEBUG("msg = ${msg}")
@@ -3681,5 +3676,5 @@ def playTrackAndResume(device, uri, volume, myDelay) {
 
 
 def setAppVersion(){
-    state.appversion = "P2.0.8"
+    state.appversion = "P2.0.8.AAB002"
 }
