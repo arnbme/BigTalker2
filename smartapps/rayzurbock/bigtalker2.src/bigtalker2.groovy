@@ -13,6 +13,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ * 	Dec 04, 2018 	P2.0.8.AAB002 Talk routine: change speech to use single multiple speak command to reduce overhead
  * 	Nov 25, 2018	P2.0.8.AAB001 restore weather interface using ApiXu DTH, restore weather tokens and code
  *									incomplete due to issues with APixU information
  * 	Nov 25, 2018	P2.0.8.AAB001 use parent routine for all token help, eliminate child help routine
@@ -2304,7 +2305,8 @@ def adjustWeatherPhrase(phraseIn){
     return phraseOut
 }
 
-def Talk(appname, phrase, customSpeechDevice, volume, resume, personality, voice, evt){
+def Talk(appname, phrase, customSpeechDevice, volume, resume, personality, voice, evt)
+	{
 	def myDelay = 100
     def myVoice = settings?.speechVoice
     if (myVoice == "" || myVoice == null) { myVoice = "Salli(en-us)" } 
@@ -2573,78 +2575,50 @@ def Talk(appname, phrase, customSpeechDevice, volume, resume, personality, voice
 				} //currentSpeechDevices.each()
 			} //state.ableToTalk
 		} //if (!(settings.speechDeviceDefault == null) || !(customSpeechDevice == null))
-	}// if (state.speechDeviceType=="capability.musicPlayer")
-	if ((state.speechDeviceType == "capability.speechSynthesis") && (!( phrase==null ) && !(phrase==""))){
-		//capability.speechSynthesis is in use
-		if (!(settings?.speechDeviceDefault == null) || !(customSpeechDevice == null)) {
+	}
+	
+	
+//	Speech Device
+	if ((state.speechDeviceType == "capability.speechSynthesis") && (!( phrase==null ) && !(phrase=="")))
+		{
+		if (!(settings?.speechDeviceDefault == null) || !(customSpeechDevice == null)) 
+			{
 			LOGTRACE("TALK(${appname}.${evt.name}) |sS| >> ${phrase}")
-			if (!(customSpeechDevice == null)) {
+			if (!(customSpeechDevice == null))
 				currentSpeechDevices = customSpeechDevice
-			} else {
-				//Use Default Speech Device
+			else
 				currentSpeechDevices = settings.speechDeviceDefault
-			}// If (!(customSpeechDevice == null))
-			//Iterate Speech Devices and talk
-			def attrs = currentSpeechDevices.supportedAttributes
-			currentSpeechDevices.each(){
-				// Determine device name either by it.displayName or it.device.displayName (whichever works)
-				try {
-					LOGTRACE("TALK(${appname}.${evt.name}) |sS| ${it.displayName} | Sending speak().")
-				}
-				catch (ex) {
-					LOGDEBUG("TALK(${appname}.${evt.name}) |sS| it.displayName failed, trying it.device.displayName")
-					try {
-						LOGTRACE("TALK(${appname}.${evt.name}) |sS| ${it.device.displayName} | Sending speak().")
-					}
-					catch (ex2) {
-						LOGDEBUG("TALK(${appname}.${evt.name}) |sS| it.device.displayName failed, trying it.device.name")
-						LOGTRACE("TALK(${appname}.${evt.name}) |sS| ${it.device.name} | Sending speak().")
-					}
-				}
-				spoke = true
-				if (phrase[0]=='|')
+			if (phrase[0]=='|')
+				{
+				def soundType=phrase.toUpperCase()
+				if (soundType == '|SIREN|')
 					{
-					def soundType=phrase.toUpperCase()
-//					log.debug "soundType: ${soundType} byte1:${phrase[0]}"
-					if (soundType == '|SIREN|')
-						{
-						it.siren()
-						return false
-						}
-					else
-					if (soundType == '|OFF|')
-						{
-						it.off()
-						return false
-						}
-					else
-					if (soundType == '|CHIME|')
-						{
-						it.chime()
-						return false
-						}
-					else	
-					if (soundType == '|DOORBELL|')
-						{
-						it.doorbell()
-						return false
-						}
-					}	
-				it.speak(phrase)
-			}// currentSpeechDevices.each()
-		} //if (!(settings.speechDeviceDefault == null) || !(customSpeechDevice == null))
-	} //if (state.speechDeviceType == "capability.speechSynthesis")
-
-	if ((!(smartAppSpeechDevice) && !(spoke)) && (!(phrase == null) && !(phrase == "")) && !(playAudioFile)) {
-		//No musicPlayer, speechSynthesis, or smartAppSpeechDevices selected. No route to export speech!
-		LOGTRACE("TALK(${appname}.${evt.name}) |ERROR| No selected speech device or smartAppSpeechDevice token in phrase. ${phrase}")
-	} else {
-    	if ((smartAppSpeechDevice && !spoke) && (!(phrase == null) && !(phrase == ""))){
-			LOGTRACE("TALK(${appname}.${evt.name}) |sA| Sent to another smartApp.")
-       	}
-   	}
-    phrase = ""
-}//Talk()
+					currentSpeechDevices.siren()
+					return false
+					}
+				else
+				if (soundType == '|OFF|')
+					{
+					currentSpeechDevices.off()
+					return false
+					}
+				else
+				if (soundType == '|CHIME|')
+					{
+					currentSpeechDevices.chime()
+					return false
+					}
+				else	
+				if (soundType == '|DOORBELL|')
+					{
+					currentSpeechDevices.doorbell()
+					return false
+					}
+				}
+			currentSpeechDevices.speak(phrase)
+			}
+		} 
+	} 
 
 def timeAllowed(devicetype,index){
     def now = new Date()
